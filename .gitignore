@@ -1,0 +1,35 @@
+# ===== 데이터 =====
+*.h5ad
+*.h5
+*.zarr/
+data/
+
+# ===== 다운로드 로그 =====
+*.log
+nohup.out
+
+# ===== 파이썬 =====
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+
+# ===== 환경/시크릿 =====
+.env
+.venv/
+venv/
+
+# ===== 에디터 =====
+.vscode/
+.idea/
+.DS_Store
+
+# ===== 산출물 =====
+figures/*.png
+figures/*.pdf
+outputs/
+checkpoints/
+*.ckpt
+
+# ===== 예외: 스크립트에서 필요한 작은 샘플은 허용 (나중에 규칙 추가) =====
+!data/README.md
