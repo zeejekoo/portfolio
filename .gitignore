@@ -1,23 +1,32 @@
-# ===== 데이터 =====
-*.h5ad
-*.h5
-*.zarr/
-data/
+# ===== 데이터 (모든 task 공통) =====
+**/*.h5ad
+**/*.h5
+**/*.zarr/
+**/*.fastq
+**/*.fastq.gz
+**/*.bam
+**/*.bam.bai
+**/*.sam
 
-# ===== 다운로드 로그 =====
-*.log
-nohup.out
+# ===== STAR 인덱스 (Task 1) =====
+**/star_index/
+**/*.Aligned.out.*
+**/*.SJ.out.tab
+
+# ===== 다운로드/실행 로그 =====
+**/*.log
+**/nohup.out
 
 # ===== 파이썬 =====
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-.pytest_cache/
+**/__pycache__/
+**/*.pyc
+**/.ipynb_checkpoints/
+**/.pytest_cache/
 
 # ===== 환경/시크릿 =====
 .env
-.venv/
-venv/
+**/.venv/
+**/venv/
 
 # ===== 에디터 =====
 .vscode/
@@ -25,11 +34,11 @@ venv/
 .DS_Store
 
 # ===== 산출물 =====
-figures/*.png
-figures/*.pdf
-outputs/
-checkpoints/
-*.ckpt
+**/figures/*.png
+**/figures/*.pdf
+**/outputs/
+**/checkpoints/
+**/*.ckpt
 
-# ===== 예외: 스크립트에서 필요한 작은 샘플은 허용 (나중에 규칙 추가) =====
-!data/README.md
+# ===== 예외: 데이터 폴더 README는 허용 =====
+!**/data/README.md
