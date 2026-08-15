@@ -20,7 +20,7 @@
       → **Enrichment 4x, p=6e-85, verdict=conclusive** (`src/gene_overlap.py`)
 
 ### (1) 공간 데이터 전처리
-- [ ] **(1)-1** 두 h5ad 데이터에 `donor` 정보로 개별 슬라이드 식별,  
+- [x] **(1)-1** 두 h5ad 데이터에 `donor` 정보로 개별 슬라이드 식별,  
       각 샘플별 Cell-type Map 그리기
 - [ ] **(1)-2** Leiden 클러스터링 수행
 
