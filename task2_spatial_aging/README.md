@@ -39,21 +39,40 @@
 ---
 
 ## 데이터 스키마 (확정)
+obs 컬럼:
+age {'4wk','24wk','90wk'} 카테고리 문자열
+donor_id 12마리 마우스 카테고리 문자열
+slice {'0','1','2'} 카테고리 문자열 (!)
+cell_type 13종 neuron, oligodendrocyte, microglial cell, ...
+center_x/y µm 단위 좌표
+obsm:
+spatial_coords / X_spatial_coords 2D 물리 좌표
+X_umap 미리 계산된 UMAP
+X_pca 미리 계산된 PCA (50 dim)
+adata.raw:
+원본 정수 카운트 살아있음 (재현 가능)
+`slice` 는 정수처럼 보이지만 카테고리 문자열이므로 `subset(slices=[0])` 호출 시 내부에서 str 캐스팅 필요. `src/data_loader.py` 의 `_isin_str` 헬퍼가 처리.
 
-
+## 코드 구성
+task2_spatial_aging/
+├── scripts/download_data.sh # CELLxGENE 3개 h5ad 재현 가능한 다운로드
+├── src/
+│ ├── data_loader.py # load / subset / summary + dtype 픽스
+│ ├── tools.py # summary / composition / spatial map
+│ ├── gene_overlap.py # (0) 검증: hypergeom test
+│ ├── clustering.py # (예정) (1)-2, (2)-2: Leiden + ARI/NMI
+│ └── comparison.py # (예정) (3)-1: aging vs LPS
+├── notebooks/
+│ └── task2_full_analysis.ipynb # (예정) 시험 제출 형식과 일치
+├── figures/ # PNG 산출물 (gitignored)
+├── outputs/ # 캐시된 h5ad (gitignored)
+└── *.h5ad # 원본 데이터 (gitignored, ~3.1GB)
 ## 재현 방법
 
 ```bash
-# 환경
 export PATH="/BiO/kbioman/kbiomanuser6/miniconda/envs/demo/bin:$PATH"
-
-# 데이터 (없으면 다운로드, 있으면 skip)
 bash scripts/download_data.sh
-
-# 저자 워크플로우 검증
 python -m src.gene_overlap
-
-# 개별 tool 자기검증
 python -m src.data_loader
 python -m src.tools
 ```
@@ -61,6 +80,4 @@ python -m src.tools
 ## 진행 로그
 
 Git 커밋 접두어로 각 단계 구분:
-- `chore:` 세팅   `data:` 데이터 스크립트   `feat:` 새 기능
-- `fix:` 버그 픽스   `docs:` 문서   `refactor:` 구조 개편
-- `exp:` 실험·EDA·노트북
+`chore:` 세팅 · `data:` 데이터 · `feat:` 새 기능 · `fix:` 픽스 · `docs:` 문서 · `refactor:` 개편 · `exp:` 노트북
