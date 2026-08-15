@@ -1,11 +1,5 @@
 """
 Agent tool 함수 모음.
-
-카테고리:
-    Meta        - get_dataset_summary
-    Aggregate   - get_cell_composition
-    Visualize   - plot_spatial_map (단일 샘플)
-                  plot_all_samples_grid (한 슬라이스, 모든 donor)
 """
 
 from __future__ import annotations
@@ -26,10 +20,37 @@ FIGURES_DIR.mkdir(exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
+# vivid 팔레트 (tab20 은 파스텔 섞여있어 옅게 보임)
+# ---------------------------------------------------------------------------
+VIVID_PALETTE = [
+    "#e6194b",  # red
+    "#3cb44b",  # green
+    "#4363d8",  # blue
+    "#f58231",  # orange
+    "#911eb4",  # purple
+    "#42d4f4",  # cyan
+    "#f032e6",  # magenta
+    "#bfef45",  # lime
+    "#fabed4",  # pink
+    "#469990",  # teal
+    "#9a6324",  # brown
+    "#800000",  # maroon
+    "#000075",  # navy
+    "#808000",  # olive
+    "#ffe119",  # yellow (마지막에 배치 — 흰 배경 대비 애매)
+]
+
+
+def _color_map(categories: Sequence[str]) -> dict:
+    """세포 타입 → 색 결정적 매핑 (반복 호출해도 같은 색)."""
+    cats = sorted(set(categories))
+    return {c: VIVID_PALETTE[i % len(VIVID_PALETTE)] for i, c in enumerate(cats)}
+
+
+# ---------------------------------------------------------------------------
 # 1. Meta
 # ---------------------------------------------------------------------------
 def get_dataset_summary(dataset: Dataset) -> dict:
-    """agent 가 데이터셋 방향을 잡을 때 첫 호출용 압축 요약."""
     return summary(dataset)
 
 
@@ -43,15 +64,12 @@ def get_cell_composition(
     slices: Optional[Sequence[int]] = None,
     top_n: int = 15,
 ) -> dict:
-    """조건별 세포 타입 조성. 필터 조합 자유."""
     adata = subset(dataset, age=age, donor_ids=donor_ids, slices=slices)
     counts = adata.obs["cell_type"].value_counts()
     total = int(counts.sum())
     pcts = (counts / total * 100).round(2) if total > 0 else counts * 0
-
     top = counts.head(top_n)
     top_pct = pcts.head(top_n)
-
     return {
         "dataset": dataset,
         "filters": {"age": age, "donor_ids": list(donor_ids) if donor_ids else None,
@@ -74,10 +92,9 @@ def plot_spatial_map(
     age: Optional[Age] = None,
     donor_id: Optional[str] = None,
     cell_types: Optional[Sequence[str]] = None,
-    point_size: float = 0.5,
+    point_size: float = 2.0,  # 이전 0.5 → 2.0
     output_name: Optional[str] = None,
 ) -> str:
-    """단일 슬라이스의 2D spatial map (cell_type 색상)."""
     adata = subset(
         dataset, age=age,
         donor_ids=[donor_id] if donor_id else None,
@@ -85,17 +102,16 @@ def plot_spatial_map(
     )
     if adata.n_obs == 0:
         raise ValueError(
-            f"조건에 맞는 세포가 없음: dataset={dataset}, slice={slice_id}, "
-            f"age={age}, donor={donor_id}"
+            f"조건에 맞는 세포가 없음: dataset={dataset}, slice={slice_id}"
         )
 
     x = adata.obs["center_x"].values
     y = adata.obs["center_y"].values
     ct = adata.obs["cell_type"].astype(str).values
 
-    unique_ct = sorted(np.unique(ct))
-    palette = plt.get_cmap("tab20", len(unique_ct))
-    ct_to_color = {c: palette(i) for i, c in enumerate(unique_ct)}
+    # dataset 전체 cell_type 기준 색 매핑 (subplot 간 일관)
+    all_ct = load(dataset).obs["cell_type"].astype(str).unique()
+    ct_to_color = _color_map(all_ct)
     colors = [ct_to_color[c] for c in ct]
 
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -109,11 +125,12 @@ def plot_spatial_map(
     if donor_id: filters.append(f"donor={donor_id}")
     ax.set_title(f"{dataset} | " + ", ".join(filters), fontsize=10)
 
+    unique_ct_in_subset = sorted(set(ct))
     handles = [plt.Line2D([0], [0], marker="o", color="w",
-                          markerfacecolor=ct_to_color[c], markersize=6, label=c)
-               for c in unique_ct]
+                          markerfacecolor=ct_to_color[c], markersize=8, label=c)
+               for c in unique_ct_in_subset]
     ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1.02, 0.5),
-              fontsize=7, frameon=False)
+              fontsize=8, frameon=False)
 
     if output_name is None:
         stub = f"{dataset}_slice{slice_id}"
@@ -134,33 +151,20 @@ def plot_all_samples_grid(
     dataset: Dataset,
     slice_id: int,
     cols: int = 4,
-    point_size: float = 0.3,
+    point_size: float = 1.5,  # 이전 0.3 → 1.5
     output_name: Optional[str] = None,
 ) -> str:
     """
     한 슬라이스 안의 모든 donor 를 grid 로 그린 대형 PNG.
-    나이 순으로 정렬(4wk → 24wk → 90wk)해 시각적 스토리 형성.
-
-    파라미터:
-        dataset      : merfish_control / merfish_lps
-        slice_id     : 0, 1, 2 중 하나
-        cols         : grid 열 수
-        point_size   : 점 크기
-        output_name  : 저장 파일명 (미지정시 자동)
-
-    반환:
-        저장된 PNG 의 프로젝트 루트 기준 상대 경로.
+    나이 순 정렬(4wk → 24wk → 90wk), vivid 팔레트, subplot 간 색 일관.
     """
     adata_all = load(dataset)
 
-    # 필수 컬럼 존재 확인 (merfish_lps 스키마가 다를 수 있음)
     for col in ["slice", "donor_id", "cell_type", "center_x", "center_y"]:
         if col not in adata_all.obs.columns:
             raise KeyError(f"{dataset} 의 obs 에 '{col}' 컬럼 없음")
 
-    # age 는 없을 수도 있음 (있으면 나이 순 정렬, 없으면 donor_id 순)
     has_age = "age" in adata_all.obs.columns
-
     slice_mask = adata_all.obs["slice"].astype(str) == str(slice_id)
     if slice_mask.sum() == 0:
         raise ValueError(f"{dataset} 에 slice {slice_id} 데이터 없음")
@@ -170,7 +174,6 @@ def plot_all_samples_grid(
         .drop_duplicates()
     )
     if has_age:
-        # 4wk → 24wk → 90wk 로 정렬 (숫자 파싱)
         donors_meta = donors_meta.assign(
             _age_num=donors_meta["age"].astype(str).str.replace("wk", "").astype(int)
         ).sort_values(["_age_num", "donor_id"]).drop(columns=["_age_num"])
@@ -180,10 +183,8 @@ def plot_all_samples_grid(
     n_donors = len(donors_meta)
     n_rows = (n_donors + cols - 1) // cols
 
-    # 전역 색 팔레트 (dataset 전체 cell_type 기준 → 서브플롯 간 일관됨)
-    unique_ct = sorted(adata_all.obs["cell_type"].astype(str).unique())
-    palette = plt.get_cmap("tab20", len(unique_ct))
-    ct_to_color = {c: palette(i) for i, c in enumerate(unique_ct)}
+    # 통일 팔레트 (dataset 전체 cell_type 기준)
+    ct_to_color = _color_map(adata_all.obs["cell_type"].astype(str).unique())
 
     fig, axes = plt.subplots(n_rows, cols, figsize=(cols * 4, n_rows * 4), squeeze=False)
     axes_flat = axes.flatten()
@@ -208,14 +209,14 @@ def plot_all_samples_grid(
         title = f"{short} ({age})" if age else short
         ax.set_title(title, fontsize=10)
 
-    # 남은 빈 subplot 숨김
     for j in range(n_donors, len(axes_flat)):
         axes_flat[j].axis("off")
 
-    # 전체 legend (fig 오른쪽 바깥)
+    # 전체 legend
+    all_ct = sorted(adata_all.obs["cell_type"].astype(str).unique())
     handles = [plt.Line2D([0], [0], marker="o", color="w",
-                          markerfacecolor=ct_to_color[c], markersize=8, label=c)
-               for c in unique_ct]
+                          markerfacecolor=ct_to_color[c], markersize=9, label=c)
+               for c in all_ct]
     fig.legend(handles=handles, loc="center left", bbox_to_anchor=(1.0, 0.5),
                fontsize=9, frameon=False)
 
@@ -236,21 +237,5 @@ def plot_all_samples_grid(
 # self-test
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    import json
-
-    print("=== 1) summary ===")
-    print(json.dumps(get_dataset_summary("merfish_control"),
-                     indent=2, default=str, ensure_ascii=False)[:300], "...\n")
-
-    print("=== 2) composition (old, slice 0) ===")
-    print(json.dumps(get_cell_composition("merfish_control", age="90wk",
-                                          slices=[0], top_n=5),
-                     indent=2, default=str, ensure_ascii=False))
-
-    print("\n=== 3) plot_spatial_map (single sample) ===")
-    p1 = plot_spatial_map("merfish_control", slice_id=0, age="90wk")
-    print(f"저장: {p1}")
-
-    print("\n=== 4) plot_all_samples_grid (slice 0, all donors) ===")
-    p2 = plot_all_samples_grid("merfish_control", slice_id=0)
-    print(f"저장: {p2}")
+    p = plot_all_samples_grid("merfish_lps", slice_id=1)
+    print(f"저장: {p}")
