@@ -81,3 +81,9 @@ python -m src.tools
 
 Git 커밋 접두어로 각 단계 구분:
 `chore:` 세팅 · `data:` 데이터 · `feat:` 새 기능 · `fix:` 픽스 · `docs:` 문서 · `refactor:` 개편 · `exp:` 노트북
+
+## 데이터 검증 노트
+
+- **Donor ID `_12` 두 파일에 존재**: 저자 배포 데이터에서 `MsBrainAgingSpatialDonor_12` 가 control 과 LPS 두 h5ad 모두에 있음
+- 확인 결과: 셀 수 (control 33,241 vs LPS 46,179, 55% 차이), slice 별 세포 수 크게 다름 → **다른 마우스, ID 재사용**
+- 처리: 별개 개체로 취급 (paired 분석 불가)
