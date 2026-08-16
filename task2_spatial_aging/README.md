@@ -1,11 +1,11 @@
-# Task 2 — Mouse Spatial Brain Atlas 공간전사체 재분석
+# Task 2 — Mouse Spatial Brain Atlas 공간전사체 분석
 
 **논문**: [Allen et al., *Cell* 2023](https://www.cell.com/cell/fulltext/S0092-8674(22)01523-9)  
 "Molecular and spatial signatures of mouse brain aging at single-cell resolution"  
 (Zhuang Lab, Harvard · DOI 10.1016/j.cell.2022.12.010)
 
 **프로젝트 목표**  
-논문 저자의 결론 **"자연 노화 뇌 = 만성 저강도 신경염증 상태로 진행"** 을 원본 데이터로부터 재분석·정량 검증한다. Unsupervised clustering (Leiden) 이 supervised cell type 라벨보다 세밀한 서브타입을 잡는지, 노화와 급성염증(LPS) 사이 공통 유전자 프로그램이 통계적으로 유의미한지, spatial 정보 위에서 동일 anatomical 위치에 재현되는지를 확인한다.
+논문 저자의 결론 **"자연 노화 뇌 = 만성 저강도 신경염증 상태로 진행"** 을 원본 데이터로부터 분석·정량 검증한다. Unsupervised clustering (Leiden) 이 supervised cell type 라벨보다 세밀한 서브타입을 잡는지, 노화와 급성염증(LPS) 사이 공통 유전자 프로그램이 통계적으로 유의미한지, spatial 정보 위에서 동일 anatomical 위치에 재현되는지를 확인한다.
 
 ## 데이터
 

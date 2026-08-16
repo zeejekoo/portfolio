@@ -1,4 +1,4 @@
-# Task 2 — 노화 뇌 공간전사체 재분석 리포트
+# Task 2 — 노화 뇌 공간전사체 분석 리포트
 
 **논문**: Allen et al., *Cell* 2023 · Zhuang Lab (Harvard) · DOI 10.1016/j.cell.2022.12.010  
 **데이터**: [CELLxGENE 31937775](https://cellxgene.cziscience.com/collections/31937775-0602-4e52-a799-b6acdd2bac2e) — MERFISH 무처치·LPS + snRNA-seq
