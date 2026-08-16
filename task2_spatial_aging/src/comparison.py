@@ -1,5 +1,5 @@
 """
-시험 Task 2 (3)-1: 노화 vs LPS 공통 DEG.
+(3)-1: 노화 vs LPS 공통 DEG.
 
 노화 DEG (control 24wk vs 90wk) 와
 LPS  DEG (control 24wk vs lps 24wk) 의 교집합.
@@ -187,7 +187,7 @@ def find_common_deg(
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("### 시험 (3)-1: 노화 vs LPS 공통 발현 변화 유전자 ###")
+    print("### (3)-1: 노화 vs LPS 공통 발현 변화 유전자 ###")
     print("=" * 60)
 
     print("\n[노화 DEG 계산: control 24wk vs 90wk] ...")
@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
 
 # ---------------------------------------------------------------------------
-# 시험 (3)-2: 공통 DEG spatial 시각화
+# (3)-2: 공통 DEG spatial 시각화
 # ---------------------------------------------------------------------------
 def plot_common_deg_spatial(
     genes=None,

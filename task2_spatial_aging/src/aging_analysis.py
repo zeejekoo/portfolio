@@ -1,5 +1,5 @@
 """
-시험 Task 2 (2)-3: 나이별 특정 세포 타입 비교.
+(2)-3: 나이별 특정 세포 타입 비교.
 
 Young (4wk) vs Old (90wk) 마우스에서
 - 세포 타입 비율 변화 (per-donor)
@@ -150,7 +150,7 @@ def plot_celltype_spatial_by_age(
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("### 시험 (2)-3: Microglia 나이별 비교 (control) ###")
+    print("### (2)-3: Microglia 나이별 비교 (control) ###")
     print("=" * 60)
     result = compare_celltype_ratio_by_age(
         dataset="merfish_control",
