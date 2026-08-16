@@ -231,3 +231,104 @@ if __name__ == "__main__":
     out_csv = OUTPUTS_DIR / "common_deg_aging_lps.csv"
     df.to_csv(out_csv, index=False)
     print(f"\n[저장] {out_csv}")
+
+
+# ---------------------------------------------------------------------------
+# 시험 (3)-2: 공통 DEG spatial 시각화
+# ---------------------------------------------------------------------------
+def plot_common_deg_spatial(
+    genes=None,
+    slice_id=0,
+    conditions=None,
+    point_size=1.5,
+    percentile_clip=99.0,
+    output_name=None,
+):
+    """
+    공통 DEG 유전자들을 spatial map 위에 발현량으로 시각화.
+    Grid: rows=조건, cols=유전자.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    if genes is None:
+        genes = ["Gfap", "Apoe", "Cdkn2a", "C4b", "Nfkbia", "Cd47"]
+    if conditions is None:
+        conditions = [("merfish_control", "90wk"), ("merfish_lps", "24wk")]
+
+    n_rows = len(conditions)
+    n_cols = len(genes)
+    fig, axes = plt.subplots(n_rows, n_cols,
+                              figsize=(n_cols * 3.5, n_rows * 3.5),
+                              squeeze=False)
+
+    for i, (dataset, age) in enumerate(conditions):
+        adata_raw = subset(dataset, age=age, slices=[slice_id])
+        if adata_raw.n_obs == 0:
+            for j in range(n_cols):
+                axes[i, j].set_title(f"{dataset} {age}: no data")
+                axes[i, j].axis("off")
+            continue
+
+        donor_counts = adata_raw.obs["donor_id"].value_counts()
+        top_donor = str(donor_counts.index[0])
+        adata_raw = adata_raw[
+            adata_raw.obs["donor_id"].astype(str) == top_donor
+        ].copy()
+
+        adata = _prepare_for_deg(adata_raw)
+
+        x = adata.obs["center_x"].astype(float).values
+        y = adata.obs["center_y"].astype(float).values
+
+        var_symbols = adata.var["feature_name"].astype(str).values
+        symbol_to_idx = {s: i for i, s in enumerate(var_symbols)}
+
+        for j, gene in enumerate(genes):
+            ax = axes[i, j]
+
+            if gene not in symbol_to_idx:
+                ax.set_title(f"{gene}: not in panel")
+                ax.axis("off")
+                continue
+
+            gene_idx = symbol_to_idx[gene]
+            expr = adata.X[:, gene_idx]
+            if hasattr(expr, "toarray"):
+                expr = expr.toarray().flatten()
+            else:
+                expr = np.asarray(expr).flatten()
+
+            vmax = float(np.percentile(expr, percentile_clip)) \
+                if expr.max() > 0 else 1.0
+
+            sc = ax.scatter(x, y, c=expr, s=point_size, cmap="viridis",
+                            vmin=0, vmax=vmax, linewidths=0)
+            ax.set_aspect("equal")
+            ax.invert_yaxis()
+            ax.set_xticks([])
+            ax.set_yticks([])
+
+            if i == 0:
+                ax.set_title(gene, fontsize=13, fontweight="bold")
+            if j == 0:
+                short_donor = top_donor.replace("MsBrainAgingSpatialDonor_", "d")
+                ax.set_ylabel(f"{dataset} {age} ({short_donor})", fontsize=10)
+
+            plt.colorbar(sc, ax=ax, fraction=0.04, pad=0.02)
+
+    fig.suptitle(
+        f"Common DEG spatial expression - slice {slice_id} "
+        f"(Aging: control 90wk vs LPS: lps 24wk)",
+        fontsize=13, y=1.01
+    )
+    plt.tight_layout()
+
+    if output_name is None:
+        output_name = f"common_deg_spatial_slice{slice_id}.png"
+    out_path = PROJECT_ROOT / "figures" / output_name
+    fig.savefig(out_path, dpi=120, bbox_inches="tight")
+    plt.close(fig)
+    return str(out_path.relative_to(PROJECT_ROOT))
