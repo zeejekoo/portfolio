@@ -42,3 +42,10 @@
 
 # ===== 예외: 데이터 폴더 README는 허용 =====
 !**/data/README.md
+
+# ===== REPORT.md 렌더링용 대표 이미지는 GitHub 에 노출 =====
+!task2_spatial_aging/figures/merfish_control_all_donors_slice0_cell_type.png
+!task2_spatial_aging/figures/merfish_control_all_donors_slice0_leiden.png
+!task2_spatial_aging/figures/confusion_merfish_control_r1_row.png
+!task2_spatial_aging/figures/aging_microglial_cell_slice0.png
+!task2_spatial_aging/figures/common_deg_spatial_slice0.png
