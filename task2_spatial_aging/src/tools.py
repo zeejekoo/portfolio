@@ -112,8 +112,8 @@ def plot_spatial_map(
     if adata.n_obs == 0:
         raise ValueError(f"조건에 맞는 세포 없음: {dataset}, slice={slice_id}")
 
-    x = adata.obs["center_x"].values
-    y = adata.obs["center_y"].values
+    x = adata.obs["center_x"].astype(float).values
+    y = adata.obs["center_y"].astype(float).values
     ct = adata.obs["cell_type"].astype(str).values
 
     all_ct = load(dataset).obs["cell_type"].astype(str).unique()
@@ -220,8 +220,8 @@ def plot_all_samples_grid(
         donor_mask = slice_data.obs["donor_id"].astype(str) == str(donor_id)
         sub = slice_data[donor_mask]
 
-        x = sub.obs["center_x"].values
-        y = sub.obs["center_y"].values
+        x = sub.obs["center_x"].astype(float).values
+        y = sub.obs["center_y"].astype(float).values
         cat = sub.obs[color_by].astype(str).values
         colors = [cat_to_color[c] for c in cat]
 
